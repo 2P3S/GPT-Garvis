@@ -65,4 +65,3 @@
     - 생각보다 되게 정확함 ㄷㄷ
     - 데모버전 테스트 영상 https://www.youtube.com/watch?v=zvZ0u9S95Ow 
     - 정확도 good, but  이용자 많아지면 실시간 변환 시간은 영향가나??
-
