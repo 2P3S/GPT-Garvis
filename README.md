@@ -114,7 +114,3 @@
 ## 브런치 관리 규칙
 1. main 절대 건들지 않기 (릴리즈 할때나 버전업할때)
 2. 개발 중에 테스트가 끝난 코드는 develop/main/server  develop/main/front에 pull request해서 merge(코드 리뷰 필수)
-
-공부하면서 아이디어 다듬기
-월요일까지는 희수 - 개발가능환경으로 세팅
-주용 - nestjs 환경구축 
