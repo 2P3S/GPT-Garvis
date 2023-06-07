@@ -1,10 +1,10 @@
 import { useState, MouseEvent } from 'react'
 import Head from 'next/head'
 
-import HomeContainer from '@/container/HomeContainer'
+import ChatContainer from '@/container/ChatContainer'
 import Modal from '@/components/Modal'
 
-// "/" 시작점
+// "/chat" 시작점
 export default function Home() {
 
   const [ modalDisplay, setModalDisplay ] = useState<string>('none') ;
@@ -19,7 +19,7 @@ export default function Home() {
       <Head>
       </Head>
       <main id = "wrap">
-        <HomeContainer 
+        <ChatContainer 
           onClickModalDisplay = { onClickModalDisplay }
         />
         <Modal 
