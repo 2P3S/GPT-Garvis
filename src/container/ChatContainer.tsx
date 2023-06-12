@@ -1,4 +1,4 @@
-import { FC, MouseEvent } from 'react'
+import { FC, MouseEvent, useState } from 'react'
 
 import Image from 'public/Image.svg'
 import Emotiocon from 'public/emoticon.svg'
@@ -21,7 +21,12 @@ import {
     ChatHeader,
     ChatMain,
     ChatArea,
-    Ballon,
+    ChatItem,
+    DateItem,
+    DateSpan,
+    UserSpan,
+    BallonUser,
+    BallonSelf,
     ChatFooter,
     FooterArea,
     FooterIcon,
@@ -38,11 +43,28 @@ const notoKr = Noto_Sans_KR({
 }) ;
 
 interface Props {
-    onClickModalDisplay: Function
+    onClickModalDisplay : Function
+}
+
+interface ChatData {
+    role : string,
+    message : string,
+    time : Date,
+    userName : string
 }
 
 // "/chat" Contents
 const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
+
+    // 서버로 부터 받은 데이터
+    const [chatData, setChatData] = useState<Array<ChatData>>([
+        { role :'user', message :'안녕 난 김희수야', time : new Date(), userName : "Lee" },
+        { role :'self', message :'안녕 이건 내가 보낸 챗이야', time : new Date(), userName : "Kim" },
+        { role :'gpt', message :'안녕하세요 저는 gpt입니다', time : new Date(), userName : "GPT" },
+    ])
+
+    // 사용자가 입력창에 입력한 데이터
+    const [ inputMessage, setInputMessage ] = useState<string>('') ;
 
     return (
         <Container>
@@ -109,22 +131,37 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                     </MenuUserItem>
                 </ChatHeader>
                 <ChatMain>
-                    {/* map 써서 */}
-                    <ChatArea>
-                        <Ballon>안녕</Ballon>
-                    </ChatArea>
-                    <ChatArea>
-                        <Ballon>Hi</Ballon>
-                    </ChatArea>
-                    {/* <ChatArea>
-                        <Ballon />
-                    </ChatArea>
-                    <ChatArea>
-                        <Ballon />
-                    </ChatArea>
-                    <ChatArea>
-                        <Ballon />
-                    </ChatArea> */}
+                    {
+                        chatData.map((item, i)=>{
+                            const { role, message, time, userName } = item ;
+                            // TODO role에 따른 if문 추가하기. role 인자로 주는건 빼도될듯
+                            if( role === 'self' ) {
+                                return(
+                                    <ChatArea role={role}>
+                                        <ChatItem>
+                                            <BallonSelf>{message}</BallonSelf>
+                                            <DateItem role={role}>
+                                                <UserSpan>{ userName }</UserSpan>
+                                                <DateSpan>{ `${time.getMonth() + 1}.${time.getDate()} at ${time.getHours()} : ${time.getMinutes()}` }</DateSpan>
+                                            </DateItem>
+                                        </ChatItem>
+                                    </ChatArea>
+                                ) ;
+                            }else {
+                                return(
+                                    <ChatArea role={role}>
+                                        <ChatItem>
+                                            <BallonUser>{message}</BallonUser>
+                                            <DateItem role={role}>
+                                                <UserSpan>{ userName }</UserSpan>
+                                                <DateSpan>{ `${time.getMonth() + 1}.${time.getDate()} at ${time.getHours()} : ${time.getMinutes()}` }</DateSpan>
+                                            </DateItem>
+                                        </ChatItem>
+                                    </ChatArea>
+                                ) ;
+                            }
+                        })
+                    }
                 </ChatMain>
                 <ChatFooter>
                     <FooterArea>
@@ -138,6 +175,16 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                             {/* input 데이터 받아서 채팅 작성 */}
                             <MessageInput 
                                 placeholder = "Message"
+                                value = {inputMessage}
+                                onChange={ (e) => setInputMessage(e.target.value) }
+                                onKeyDown={ (e) => {
+                                    if (e.key === 'Enter') {
+                                        const tempChatData = [...chatData]
+                                        tempChatData.push({role:'self', message:inputMessage, time: new Date(), userName : "Kim"})
+                                        setChatData(tempChatData)
+                                        setInputMessage('')
+                                      }
+                                }}
                             />
                             <FooterIcon 
                                 src = { Emotiocon } 

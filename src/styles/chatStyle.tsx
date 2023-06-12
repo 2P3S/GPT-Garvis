@@ -137,13 +137,46 @@ const ChatArea = styled.div`
 
     //border : 1px solid #000000 ;
 
+    display : flex ;
+    justify-content: ${ props => props.role === "self" ? "end" : "start" } ;
+
     &:not(:first-child) {
         margin-top : 15px ; 
     }
 
 `;
 
-const Ballon = styled.div`
+const ChatItem = styled.div`
+
+    display : flex ;
+
+    flex-direction : column ;
+
+`;
+
+const DateItem = styled.div`
+    display : flex ;
+    justify-content : ${ props => props.role === "self" ? "end" : "start" } ;
+
+    margin : 5px 5px 0 5px ;
+
+    font-size : 12px ;
+
+`;
+
+const DateSpan = styled.span`
+    display : inline-block ;
+
+    margin-left : 5px ;
+    color : #888888 ;
+`;
+
+const UserSpan = styled.span`
+    font-weight: 700 ;
+    color : #555555 ;
+`;
+
+const BallonUser = styled.div`
     
     display : inline-block ;
     position : relative ;
@@ -152,7 +185,7 @@ const Ballon = styled.div`
     color : #000000 ;
     border-radius : 5px ;
 
-    font-size : 18px ;
+    font-size : 17px ;
     text-align : center ;
     line-height : 28px ;
 
@@ -167,6 +200,34 @@ const Ballon = styled.div`
         position : absolute ;
         top : -3px ;
         left : -3px ;
+    }
+
+`;
+
+const BallonSelf = styled.div`
+    
+    display : inline-block ;
+    position : relative ;
+    padding : 2px 15px ;
+    background : #DEDFE1 ;
+    color : #000000 ;
+    border-radius : 5px ;
+
+    font-size : 17px ;
+    text-align : center ;
+    line-height : 28px ;
+
+    &::after {
+        border-top : 7px solid transparent ;
+        border-left : 0 solid transparent ;
+        border-right : 5px solid #DEDFE1 ;
+        border-bottom : 4px solid transparent ;
+        transform: rotate(40deg) ;
+
+        content : "";
+        position : absolute ;
+        top : -5px ;
+        right : -2px ;
     }
 
 `;
@@ -241,7 +302,12 @@ export {
     ChatHeader,
     ChatMain,
     ChatArea,
-    Ballon,
+    ChatItem,
+    DateItem,
+    DateSpan,
+    UserSpan,
+    BallonUser,
+    BallonSelf,
     ChatFooter,
     FooterArea,
     FooterIcon,
