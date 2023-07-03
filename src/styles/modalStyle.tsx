@@ -84,6 +84,7 @@ const Description = styled.p`
     margin-top : 20px ;
 
     font-size : 18px ;
+    line-height : 130% ;
     color : #888888 ;
 
 `;

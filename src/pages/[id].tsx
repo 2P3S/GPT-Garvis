@@ -1,4 +1,4 @@
-import { useState, MouseEvent } from 'react'
+import { useState, MouseEvent, useEffect } from 'react'
 import Head from 'next/head'
 
 import HomeContainer from '@/container/HomeContainer'
@@ -26,6 +26,7 @@ export default function Home() {
         setRoom(response.data) ;
       }) ;
     }
+
   }
 
   return (
@@ -35,7 +36,7 @@ export default function Home() {
       <main id = "wrap">
         <HomeContainer 
           onClickModalDisplay = { onClickModalDisplay }
-          url = { room.id }
+          url = {''}
         />
         <Modal 
           modalDisplay = { modalDisplay }

@@ -59,7 +59,7 @@ const UserName = styled.input`
     font-size : 22px ;
     color : #888888 ;
 
-    margin-bottom : 20px ;
+    margin-bottom : 55px ;
 `;
 
 const UserImageChangeButton = styled.button`
@@ -79,7 +79,7 @@ const UserImageChangeButton = styled.button`
     font-weight : 600 ;
     color : #000000 ;
 
-    margin-bottom : 55px ;
+    margin-bottom : 20px ;
 
     cursor : pointer ;
 

@@ -131,6 +131,21 @@ const ChatMain = styled.div`
 
     padding : 40px 100px ;
 
+    overflow : overlay ;
+
+    &::-webkit-scrollbar {
+        width : .4em ;  
+        margin : 0 ;
+        padding : 0 ;
+    }
+    &::-webkit-scrollbar,
+    &::-webkit-scrollbar-thumb {
+        overflow : visible ;
+        border-radius : 4px ;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0,.2) ;
+    }
 `;
 
 const ChatArea = styled.div`
@@ -158,9 +173,9 @@ const DateItem = styled.div`
     display : flex ;
     justify-content : ${ props => props.role === "self" ? "end" : "start" } ;
 
-    margin : 5px 5px 0 5px ;
+    margin : 10px 5px 0 5px ;
 
-    font-size : 12px ;
+    font-size : 10px ;
 
 `;
 
@@ -180,14 +195,14 @@ const BallonUser = styled.div`
     
     display : inline-block ;
     position : relative ;
-    padding : 2px 15px ;
+    padding : 4px 8px ;
     background : #ffffff ;
     color : #000000 ;
     border-radius : 5px ;
 
-    font-size : 17px ;
-    text-align : center ;
-    line-height : 28px ;
+    font-size : 16px ;
+    text-align : left ;
+    line-height : 30px ;
 
     &::after {
         border-top : 4px solid transparent ;
@@ -208,14 +223,17 @@ const BallonSelf = styled.div`
     
     display : inline-block ;
     position : relative ;
-    padding : 2px 15px ;
+
+    box-sizing : border-box ;
+
+    padding : 4px 8px ;
     background : #DEDFE1 ;
     color : #000000 ;
     border-radius : 5px ;
 
-    font-size : 17px ;
-    text-align : center ;
-    line-height : 28px ;
+    font-size : 16px ;
+    text-align : right ;
+    line-height : 30px ;
 
     &::after {
         border-top : 7px solid transparent ;
@@ -231,6 +249,35 @@ const BallonSelf = styled.div`
     }
 
 `;
+
+const BallonGPT = styled.div`
+    
+    display : inline-block ;
+    position : relative ;
+    padding : 4px 8px ;
+    background : #ffffff ;
+    color : #000000 ;
+    border-radius : 5px ;
+
+    width : 450px ;
+
+    font-size : 16px ;
+    text-align : left ;
+    line-height : 30px ;
+
+`;
+
+const GPTSpan = styled.span`
+    font-size : 17px ;
+    font-weight : 500 ;
+
+    color : #888888 ;
+`;
+
+const MessageButton = styled.button`
+
+`;
+
 
 const ChatFooter = styled.div`
 
@@ -308,6 +355,9 @@ export {
     UserSpan,
     BallonUser,
     BallonSelf,
+    BallonGPT,
+    GPTSpan,
+    MessageButton,
     ChatFooter,
     FooterArea,
     FooterIcon,
