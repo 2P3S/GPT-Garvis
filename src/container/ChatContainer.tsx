@@ -43,7 +43,6 @@ import {
 
 } from '@/styles/chatStyle'
 import { Roboto, Noto_Sans_KR } from 'next/font/google'
-import { BASE_URL } from '@/util/api'
 
 const roboto = Roboto({ weight: ['400', '500', '700'], subsets: ['latin'] }) ;
 const notoKr = Noto_Sans_KR({ 
@@ -67,13 +66,10 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
 
     const router = useRouter() ;
     // 서버로 부터 받은 데이터
-    const [chatData, setChatData] = useState<Array<ChatData>>([
-        { role :'user', message :'안녕 난 김희수야', time : new Date(), userName : "Lee" },
-        { role :'self', message :'안녕 이건 내가 보낸 챗이야', time : new Date(), userName : "Kim" },
-        { role :'gpt', message :"안녕하세요 저는 gpt입니다. 질문에 대해서 답변을 드리자면 안녕하세요 저는 gpt입니다. 질문에 대해서 답변을 드리자면\n안녕하세요 저는 gpt입니다. 질문에 대해서 답변을 드리자면\n", time : new Date(), userName : "GPT" },
-    ]) ;
+    const [ chatData, setChatData ] = useState<Array<ChatData>>([]) ;
     const [ cookies, _ ] = useCookies<any>(['member', 'me']) ;
     const [ socket, setSocket ] = useState<any>(undefined) ; 
+    const [ members, setMembers ] = useState<Array<any>>([]) ;
 
     // 사용자가 입력창에 입력한 데이터
     const [ inputMessage, setInputMessage ] = useState<string>('') ;
@@ -81,41 +77,27 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
     useEffect(() => {
         
         if( cookies.me && cookies.member ) {
-            console.log(cookies) ;
-
-            console.log('소켓 연결 중...') ;
 
             // 소켓 서버에 연결
-            const socket = io(`http://localhost:3001/chat`); // 소켓 서버의 URL로 변경해야 합니다.
+            const socket = io(`http://localhost:3001/gpt-garvis`); // 소켓 서버의 URL로 변경해야 합니다.
 
             // 연결이 성공했을 때 실행되는 이벤트 핸들러
             socket.on('connect', () => {
-                console.log('소켓 연결 성공') ;
-
+                console.log('Socket Connection Success') ;
                 // 서버로 데이터 보내기
                 const requestData = { roomId : cookies.member.room, memberId : cookies.member.id } ;
-                console.log(requestData) ;
-
-                socket.emit('join-room', requestData) ;
+                socket.emit('join-request', requestData) ;
             });
 
-            socket.on('join-success', (data) => {
-                // console.log('member-connected 이벤트 데이터:', data);
-                setChatData([
-                    ...chatData,
-                    { 
-                        role : "system",
-                        message : data.message,
-                        time : new Date(),
-                        userName : "System"
-                     }
-                ]) ;
-                // const requestData = { roomId : cookies.member.room, memberId : cookies.member.id } ;
-                // socket.emit('join-request', requestData) ;
+            // 유저가 연결됬을때 실행되는 이벤트 핸들러
+            socket.on('member-connected', (message) => {
+                console.log('Room Join Success Event Data : ', message) ;
+                // const requestData = { roomId : cookies.member.room, memberId : cookies.member.id, message : inputMessage } ;
+                // socket.emit('message', requestData) ;
             });
 
             socket.on('message', (data) => {
-                console.log(data) ;
+                console.log("message : ", data) ;
                 // setChatData([
                 //     ...chatData,
                 //     { 
@@ -127,10 +109,9 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                 // ]) ;
             });
 
-            // 메시지를 수신할 때 실행되는 이벤트 핸들러
-            socket.on('member-connected', (message) => {
-                console.log('받은 메시지:', message);
-            });
+            socket.on('command-gpt', (data) => {
+                console.log(data) ;
+            })
 
             setSocket(socket) ;
 
@@ -281,8 +262,8 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                         <FooterIcon 
                             src = { Image } 
                             alt = "Image icon" 
-                            width = "20px"
-                            height = "20px" 
+                            width = "20"
+                            height = "20" 
                         />
                         <MessageBox>
                             {/* input 데이터 받아서 채팅 작성 */}
@@ -291,6 +272,7 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                                 value = {inputMessage}
                                 onChange={ (e) => setInputMessage(e.target.value) }
                                 onKeyDown={ (e) => {
+                                    e.stopPropagation() ;
                                     if (e.key === 'Enter') {
                                         if( inputMessage == "" ) return ;
                                         const tempChatData = [...chatData]
@@ -299,31 +281,28 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                                         socket.emit("message", requestData)
                                         setChatData(tempChatData)
                                         setInputMessage('')
-                                    }else {
-                                        console.log(e.key) ;
                                     }
-
                                 }}
                             />
                             <FooterIcon 
                                 src = { Emotiocon } 
                                 alt = "Emotiocon icon" 
-                                width = "20px"
-                                height = "20px" 
+                                width = "20"
+                                height = "20" 
                             />
                             <FooterIcon 
                                 src = { ChatInput } 
                                 alt = "Chat input icon" 
-                                width = "20px"
-                                height = "20px" 
+                                width = "20"
+                                height = "20" 
                                 style = {{ marginLeft : "10px", cursor : "pointer" }}
-                                onClick = { (e) =>  {
-                                    if( inputMessage == "" ) return ;
-                                    const tempChatData = [...chatData]
-                                    tempChatData.push({role:'self', message:inputMessage, time: new Date(), userName : "Kim"})
-                                    setChatData(tempChatData)
-                                    setInputMessage('')
-                                }}
+                                // onClick = { (e) =>  {
+                                //     if( inputMessage == "" ) return ;
+                                //     const tempChatData = [...chatData]
+                                //     tempChatData.push({role:'self', message:inputMessage, time: new Date(), userName : "Kim"})
+                                //     setChatData(tempChatData)
+                                //     setInputMessage('')
+                                // }}
                             />
                         </MessageBox>
                     </FooterArea>

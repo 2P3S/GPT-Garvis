@@ -1,10 +1,10 @@
 import styled from 'styled-components'
 
-const Container = styled.div<{ [ key : string ] : string }>`
+const Container = styled.div`
 
     position : absolute ;
 
-    display : ${ ({ display }) => { return display } } ;
+    display : ${ (props : any) => { return `${props.display}` } } ;
 
     width : 100% ;
     height : 100% ;

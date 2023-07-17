@@ -1,13 +1,6 @@
 import styled from 'styled-components'
 import Image from 'next/image'
 
-interface ImageProps {
-    width : string,
-    height : string,
-    src : string,
-    alt : string
-}
-
 const Aside = styled.aside`
     
     display : flex ;
@@ -70,12 +63,14 @@ const MenuUserItem = styled.div`
 
 `;
 
-const UserImage = styled.div.attrs(( props : ImageProps ) => ({
+const UserImage = styled.div.attrs(( props : any ) => ({
     src : props.src,
     alt : props.alt,
+    width : props.width,
+    height : props.height
 }))`
-    width : ${ ( props : ImageProps ) => props.width } ;
-    height : ${ ( props : ImageProps ) => props.height } ;
+    width : ${ ( props : any ) => props.width } ;
+    height : ${ ( props : any ) => props.height } ;
     
     background-color : #eeeeee ;
     border-radius : 10px ;
@@ -304,8 +299,8 @@ const FooterArea = styled.div`
 
 const FooterIcon = styled(Image)`
 
-    width : ${ ( props : ImageProps ) => props.width } ;
-    height : ${ ( props : ImageProps ) => props.height } ;
+    width : ${ ( props : any ) => `${props.width}px` } ;
+    height : ${ ( props : any ) => `${props.height}px` } ;
     
 `;
 

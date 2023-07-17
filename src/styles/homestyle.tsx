@@ -32,6 +32,8 @@ const UserArea = styled.div`
 const UserImage = styled.div.attrs(( props : ImageProps ) => ({
     src : props.src,
     alt : props.alt,
+    width : props.width,
+    height : props.height
 }))`
     width : ${ ( props : ImageProps ) => props.width } ;
     height : ${ ( props : ImageProps ) => props.height } ;
