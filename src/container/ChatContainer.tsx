@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useState, useEffect } from 'react'
+import { FC, MouseEvent, useState, useEffect, KeyboardEvent } from 'react'
 import { useRouter } from 'next/router'
 import { useCookies } from 'react-cookie'
 
@@ -70,6 +70,7 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
     const [ cookies, _ ] = useCookies<any>(['member', 'me']) ;
     const [ socket, setSocket ] = useState<any>(undefined) ; 
     const [ members, setMembers ] = useState<Array<any>>([]) ;
+    const [ me, setMe ] = useState<any>({}) ;
 
     // 사용자가 입력창에 입력한 데이터
     const [ inputMessage, setInputMessage ] = useState<string>('') ;
@@ -90,24 +91,23 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
             });
 
             // 유저가 연결됬을때 실행되는 이벤트 핸들러
-            socket.on('member-connected', (message) => {
-                console.log('Room Join Success Event Data : ', message) ;
-                // const requestData = { roomId : cookies.member.room, memberId : cookies.member.id, message : inputMessage } ;
-                // socket.emit('message', requestData) ;
+            socket.on('member-connected', (response) => {
+                console.log('Room Join Success Event Data : ', response) ;
+
+                const members = response.data.members ;
+
+                const uniqueArray = members.filter((obj : any, index : number, self : any) =>
+                                        index === self.findIndex((o : any) => o.id === obj.id && o.name === obj.name)
+                                    );
+                
+                setMembers(uniqueArray) ;
             });
 
-            socket.on('message', (data) => {
-                console.log("message : ", data) ;
-                // setChatData([
-                //     ...chatData,
-                //     { 
-                //         role : "user",
-                //         message : data.message,
-                //         time : new Date(),
-                //         userName : "System"
-                //      }
-                // ]) ;
-            });
+            socket.on("join-success", (response) => {
+                const me = response.data.member ;
+                console.log("join-success : ", me) ;
+                setMe(me) ;
+            }) ;
 
             socket.on('command-gpt', (data) => {
                 console.log(data) ;
@@ -133,7 +133,55 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
 
         chatMain.scrollTop = chatMain.scrollHeight ;
 
-    }, [ chatData ]) ;
+        if(socket && me) {
+            socket.on('message', (response : any) => {
+
+                const member = response.data.member ;
+                const message = response.data.message ;
+
+                if(me.id === member.id) {
+                    setChatData([
+                        ...chatData,
+                        { 
+                            role : "self",
+                            message : message,
+                            time : new Date(),
+                            userName : "me"
+                        }
+                    ]) ;
+                }else {
+                    setChatData([
+                        ...chatData,
+                        { 
+                            role : "user",
+                            message : message,
+                            time : new Date(),
+                            userName : member.name
+                        }
+                    ]) ;
+                }
+            });
+        }
+
+    }, [ chatData, socket, me ]) ;
+
+    useEffect(() => {
+        console.log("useState : ", inputMessage) ;
+    }, [ inputMessage ]) ;
+
+    function keyDownEvent(e : KeyboardEvent<HTMLInputElement>) {
+        e.stopPropagation() ; 
+        if (e.key === 'Enter' && e.nativeEvent.isComposing === false) {
+            e.preventDefault() ;
+            if( inputMessage === "" ) return ;
+            console.log("event : ", inputMessage) ;
+            const requestData = { roomId : cookies.member.room, memberId : cookies.member.id, message : inputMessage } ;
+            socket.emit('message', requestData) ;
+            setInputMessage("") ;
+        }
+    }
+
+    
 
     return (
         <Container>
@@ -159,28 +207,23 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                         Participant
                     </MenuTitle>
                     <MenuArea>
-                        <MenuItem>
-                            <MenuUserItem>
-                                <UserImage 
-                                    src = "" 
-                                    alt = "User image" 
-                                    width = "25px"
-                                    height = "25px" 
-                                />
-                                <UserText>{ cookies?.me ? cookies.me : "Not Found" }</UserText>
-                            </MenuUserItem>
-                        </MenuItem>
-                        <MenuItem>
-                            <MenuUserItem>
-                                <UserImage 
-                                    src = "" 
-                                    alt = "User image" 
-                                    width = "25px"
-                                    height = "25px" 
-                                />
-                                <UserText>Lee</UserText>
-                            </MenuUserItem>
-                        </MenuItem>
+                        {
+                            members.map((member : any) => {
+                                return (
+                                    <MenuItem>
+                                        <MenuUserItem>
+                                            <UserImage 
+                                                src = "" 
+                                                alt = "User image" 
+                                                width = "25px"
+                                                height = "25px" 
+                                            />
+                                            <UserText>{ member.name === me.name ? "me" : member.name }</UserText>
+                                        </MenuUserItem>
+                                    </MenuItem>
+                                ) ;
+                            })
+                        }
                     </MenuArea>
                 </MenuFooter>
             </Aside>
@@ -198,7 +241,7 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                                 marginLeft : "10px",
                                 fontWeight : "700"
                             }}
-                        >Kim</UserText>
+                        >{ me.name }</UserText>
                     </MenuUserItem>
                 </ChatHeader>
                 <ChatMain className = { `${notoKr.className} chat-main` } >
@@ -270,19 +313,11 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                             <MessageInput 
                                 placeholder = "Message"
                                 value = {inputMessage}
-                                onChange={ (e) => setInputMessage(e.target.value) }
-                                onKeyDown={ (e) => {
-                                    e.stopPropagation() ;
-                                    if (e.key === 'Enter') {
-                                        if( inputMessage == "" ) return ;
-                                        const tempChatData = [...chatData]
-                                        tempChatData.push({role:'self', message:inputMessage, time: new Date(), userName : "Kim"})
-                                        const requestData = { roomId : cookies.member.room, memberId : cookies.member.id, message : inputMessage } ;
-                                        socket.emit("message", requestData)
-                                        setChatData(tempChatData)
-                                        setInputMessage('')
-                                    }
-                                }}
+                                onChange={ (e) => {
+                                    console.log("onChange : ", e.target.value) ;
+                                    setInputMessage(e.target.value)
+                                } }
+                                onKeyDown={ keyDownEvent }
                             />
                             <FooterIcon 
                                 src = { Emotiocon } 
@@ -296,13 +331,6 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                                 width = "20"
                                 height = "20" 
                                 style = {{ marginLeft : "10px", cursor : "pointer" }}
-                                // onClick = { (e) =>  {
-                                //     if( inputMessage == "" ) return ;
-                                //     const tempChatData = [...chatData]
-                                //     tempChatData.push({role:'self', message:inputMessage, time: new Date(), userName : "Kim"})
-                                //     setChatData(tempChatData)
-                                //     setInputMessage('')
-                                // }}
                             />
                         </MessageBox>
                     </FooterArea>
