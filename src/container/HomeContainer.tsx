@@ -18,6 +18,10 @@ import {
 import { Inter, Noto_Sans_KR } from 'next/font/google'
 import { roomAccess } from '../util/api';
 
+import char1 from 'public/char1.png'
+import char2 from 'public/char2.png'
+import char3 from 'public/char3.png'
+
 const inter = Inter({ subsets: ['latin'] }) ;
 const notoKr = Noto_Sans_KR({ 
     weight: ['400', '500', '700'],
@@ -33,9 +37,13 @@ interface Props {
 const HomeContainer : FC<Props> = ( { onClickModalDisplay, url } ) => {
 
     const router = useRouter() ;
+
+    const arrayImage = [ char1, char2, char3 ] ;
+
     const [ _, setCookies ] = useCookies<any>() ;
     const [ name, setName ] = useState<string>('') ;
     const [ roomId, setRoomId ] = useState<string|undefined>(undefined) ;
+    const [ imageIndex, setImageIndex ] = useState<number>(1) ;
 
     const expires = new Date() ;
     expires.setHours(expires.getHours() + 2) ;
@@ -59,18 +67,30 @@ const HomeContainer : FC<Props> = ( { onClickModalDisplay, url } ) => {
         roomId && setCookies('roomId', roomId, { expires }) ;
         name !== '' && setCookies('me', name, { expires }) ;
 
-        console.log(roomId, name);
-
     }, [ roomId, name ]) ;
 
-    function onClickGoChat( e : ChangeEvent<HTMLInputElement> ) {
+    useEffect(() => {
+        console.log(imageIndex) ;
+    }, [imageIndex]) ;
 
-        if( !roomId || name === '' ) return ;
+    function onClickImageChange() {
 
-        console.log(name, roomId) ;
-        console.log("chat Button Click") ;
+        let randomImageIndex ;
+            
+        while(true) {
+            randomImageIndex = Math.floor(Math.random() * 3) ;
 
-        roomAccess(JSON.stringify({ memberName : name }), roomId).then((response) => {
+            if( randomImageIndex !== imageIndex ) break ;
+        }
+        
+        setImageIndex( randomImageIndex ) ;
+    }
+
+    function onClickGoChat( e : MouseEvent<HTMLElement> ) {
+
+        if( !roomId || name === '' || imageIndex === undefined ) return ;
+
+        roomAccess(JSON.stringify({ memberName : name, imageIndex : `${imageIndex}` }), roomId).then((response) => {
             if( response?.data?.id ){ 
                 setCookies('member', response.data, { expires }) ;
                 router.push(`/chat/${roomId}`) ;
@@ -88,12 +108,12 @@ const HomeContainer : FC<Props> = ( { onClickModalDisplay, url } ) => {
         <Container>
             <UserArea>
                 <UserImage 
-                    src = "" 
+                    src = { arrayImage[imageIndex] } 
                     alt = "User image" 
-                    width = "240px"
-                    height = "240px" 
+                    width = "240"
+                    height = "240" 
                 />
-                <UserImageChangeButton>Image change</UserImageChangeButton>
+                <UserImageChangeButton onClick={(e) => onClickImageChange()}>Image change</UserImageChangeButton>
                 <UserName 
                     className = { inter.className }
                     onChange = { onChangeName }

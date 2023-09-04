@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useState, useEffect, KeyboardEvent } from 'react'
+import { FC, MouseEvent, useState, useEffect, KeyboardEvent, Dispatch, SetStateAction } from 'react'
 import { useRouter } from 'next/router'
 import { useCookies } from 'react-cookie'
 
@@ -44,6 +44,10 @@ import {
 } from '@/styles/chatStyle'
 import { Roboto, Noto_Sans_KR } from 'next/font/google'
 
+import char1 from 'public/char1.png'
+import char2 from 'public/char2.png'
+import char3 from 'public/char3.png'
+
 const roboto = Roboto({ weight: ['400', '500', '700'], subsets: ['latin'] }) ;
 const notoKr = Noto_Sans_KR({ 
     weight: ['400', '500', '700'],
@@ -52,6 +56,7 @@ const notoKr = Noto_Sans_KR({
 
 interface Props {
     onClickModalDisplay : Function
+    setUrl : Dispatch<SetStateAction<string>>
 }
 
 interface ChatData {
@@ -62,15 +67,23 @@ interface ChatData {
 }
 
 // "/chat" Contents
-const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
+const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
 
     const router = useRouter() ;
+    const arrayImage = [ char1, char2, char3 ] ;
+
     // 서버로 부터 받은 데이터
     const [ chatData, setChatData ] = useState<Array<ChatData>>([]) ;
     const [ cookies, _ ] = useCookies<any>(['member', 'me']) ;
     const [ socket, setSocket ] = useState<any>(undefined) ; 
     const [ members, setMembers ] = useState<Array<any>>([]) ;
     const [ me, setMe ] = useState<any>({}) ;
+    const [ inputChat, setInputChat ] = useState<ChatData>({
+        role : "",
+        message : "",
+        time : new Date(),
+        userName : ""
+    }) ;
 
     // 사용자가 입력창에 입력한 데이터
     const [ inputMessage, setInputMessage ] = useState<string>('') ;
@@ -78,6 +91,8 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
     useEffect(() => {
         
         if( cookies.me && cookies.member ) {
+
+            setUrl(cookies.roomId) ;
 
             // 소켓 서버에 연결
             const socket = io(`http://localhost:3001/gpt-garvis`); // 소켓 서버의 URL로 변경해야 합니다.
@@ -92,26 +107,42 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
 
             // 유저가 연결됬을때 실행되는 이벤트 핸들러
             socket.on('member-connected', (response) => {
-                console.log('Room Join Success Event Data : ', response) ;
-
                 const members = response.data.members ;
 
                 const uniqueArray = members.filter((obj : any, index : number, self : any) =>
                                         index === self.findIndex((o : any) => o.id === obj.id && o.name === obj.name)
                                     );
-                
+
                 setMembers(uniqueArray) ;
             });
 
             socket.on("join-success", (response) => {
                 const me = response.data.member ;
-                console.log("join-success : ", me) ;
                 setMe(me) ;
             }) ;
 
             socket.on('command-gpt', (data) => {
                 console.log(data) ;
-            })
+            }) ;
+
+            socket.on('message', (response : any) => {
+
+                const member = response.data.member ;
+                const message = response.data.message ;
+
+                setInputChat(cookies.member.id === member.id ? {
+                    role : "self",
+                    message : message,
+                    time : new Date(),
+                    userName : "me"
+                } : {
+                    role : "user",
+                    message : message,
+                    time : new Date(),
+                    userName : member.name
+
+                }) ;
+            });
 
             setSocket(socket) ;
 
@@ -120,68 +151,47 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
             router.push('/') ; 
         }
 
-        // 컴포넌트가 언마운트될 때 소켓 연결 종료
-        // return () => {
-        //     socket.disconnect();
-        // };
-
     }, []) ;
 
     useEffect(() => {
+        
+        if( inputChat?.message ) {
+            setChatData([
+                ...chatData,
+                inputChat
+            ]) ;
+        }
 
+    }, [ inputChat ]) ;
+
+    useEffect(() => {
         const chatMain = document.getElementsByClassName('chat-main')[0] ;
 
         chatMain.scrollTop = chatMain.scrollHeight ;
 
-        if(socket && me) {
-            socket.on('message', (response : any) => {
-
-                const member = response.data.member ;
-                const message = response.data.message ;
-
-                if(me.id === member.id) {
-                    setChatData([
-                        ...chatData,
-                        { 
-                            role : "self",
-                            message : message,
-                            time : new Date(),
-                            userName : "me"
-                        }
-                    ]) ;
-                }else {
-                    setChatData([
-                        ...chatData,
-                        { 
-                            role : "user",
-                            message : message,
-                            time : new Date(),
-                            userName : member.name
-                        }
-                    ]) ;
-                }
-            });
-        }
-
-    }, [ chatData, socket, me ]) ;
+    }, [ chatData ]) ;
 
     useEffect(() => {
-        console.log("useState : ", inputMessage) ;
-    }, [ inputMessage ]) ;
+        
+        setInputChat({
+            role : "system",
+            message : "사용자가 입장하였습니다.",
+            time : new Date(),
+            userName : "System"
+        }) ;
+
+    }, [ members ]) ;
 
     function keyDownEvent(e : KeyboardEvent<HTMLInputElement>) {
         e.stopPropagation() ; 
         if (e.key === 'Enter' && e.nativeEvent.isComposing === false) {
             e.preventDefault() ;
             if( inputMessage === "" ) return ;
-            console.log("event : ", inputMessage) ;
             const requestData = { roomId : cookies.member.room, memberId : cookies.member.id, message : inputMessage } ;
             socket.emit('message', requestData) ;
             setInputMessage("") ;
         }
     }
-
-    
 
     return (
         <Container>
@@ -213,10 +223,10 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                                     <MenuItem>
                                         <MenuUserItem>
                                             <UserImage 
-                                                src = "" 
+                                                src = { arrayImage[member.imageIndex] } 
                                                 alt = "User image" 
-                                                width = "25px"
-                                                height = "25px" 
+                                                width = "25"
+                                                height = "25" 
                                             />
                                             <UserText>{ member.name === me.name ? "me" : member.name }</UserText>
                                         </MenuUserItem>
@@ -230,11 +240,11 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
             <Chat>
                 <ChatHeader>
                     <MenuUserItem>
-                        <UserImage 
-                            src = "" 
+                        <UserImage
+                            src = { arrayImage[me.imageIndex] } 
                             alt = "User image" 
-                            width = "30px"
-                            height = "30px" 
+                            width = "30"
+                            height = "30" 
                         />
                         <UserText
                             style = {{
@@ -314,7 +324,6 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay } ) => {
                                 placeholder = "Message"
                                 value = {inputMessage}
                                 onChange={ (e) => {
-                                    console.log("onChange : ", e.target.value) ;
                                     setInputMessage(e.target.value)
                                 } }
                                 onKeyDown={ keyDownEvent }

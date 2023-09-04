@@ -63,14 +63,12 @@ const MenuUserItem = styled.div`
 
 `;
 
-const UserImage = styled.div.attrs(( props : any ) => ({
+const UserImage = styled(Image).attrs(( props : any ) => ({
     src : props.src,
     alt : props.alt,
     width : props.width,
     height : props.height
 }))`
-    width : ${ ( props : any ) => props.width } ;
-    height : ${ ( props : any ) => props.height } ;
     
     background-color : #eeeeee ;
     border-radius : 10px ;
@@ -145,10 +143,13 @@ const ChatMain = styled.div`
 
 const ChatArea = styled.div`
 
-    //border : 1px solid #000000 ;
-
     display : flex ;
-    justify-content: ${ props => props.role === "self" ? "end" : "start" } ;
+    justify-content: ${ 
+        props => 
+            props.role === "self" 
+                ? "end" 
+                    : props.role === "system" ? "center" : "start"
+    } ;
 
     &:not(:first-child) {
         margin-top : 15px ; 
@@ -166,7 +167,12 @@ const ChatItem = styled.div`
 
 const DateItem = styled.div`
     display : flex ;
-    justify-content : ${ props => props.role === "self" ? "end" : "start" } ;
+    justify-content : ${ 
+        props => 
+            props.role === "self" 
+                ? "end" 
+                    : props.role === "system" ? "center" : "start"
+    } ;
 
     margin : 10px 5px 0 5px ;
 
@@ -254,7 +260,7 @@ const BallonGPT = styled.div`
     color : #000000 ;
     border-radius : 5px ;
 
-    width : 450px ;
+    //width : 450px ;
 
     font-size : 16px ;
     text-align : left ;

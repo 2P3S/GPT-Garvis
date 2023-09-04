@@ -4,6 +4,8 @@ import { useRouter } from 'next/router'
 
 import ChatContainer from '@/container/ChatContainer'
 import Modal from '@/components/Modal'
+import { roomCreate, FRONT_BASE_URL } from '../../util/api'
+import { Room } from '@/util/interface'
 
 // "/chat" 시작점
 export default function Home() {
@@ -11,7 +13,7 @@ export default function Home() {
   const router = useRouter() ;
   const [ modalDisplay, setModalDisplay ] = useState<string>('none') ;
   const [ type, setType ] = useState<string>('') ;
-  const [ url, _ ] = useState<string>('') ;
+  const [ url, setUrl ] = useState<string>('') ;
 
   const onClickModalDisplay = ( e : MouseEvent<HTMLElement>, mode : string ) => {
     if(mode === 'help') setType('help') ;
@@ -27,10 +29,11 @@ export default function Home() {
       <main id = "wrap">
         <ChatContainer 
           onClickModalDisplay = { onClickModalDisplay }
+          setUrl = { setUrl }
         />
         <Modal 
           modalDisplay = { modalDisplay }
-          url = { url }
+          url = { `${FRONT_BASE_URL}/${url}` }
           type = { type }
           onClickModalDisplay = { onClickModalDisplay }
         />
