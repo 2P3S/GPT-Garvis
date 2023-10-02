@@ -33,10 +33,6 @@ const Modal : FC<Props> = ( { modalDisplay, url, onClickModalDisplay, type } ) =
     const copyClipboard = ( e :  MouseEvent<HTMLElement> ) => {
         navigator.clipboard.writeText(url) ;
     }
-
-    useEffect(() => {
-        console.log(type) ;
-    }, [ type ]) ;
     
     return (
         <Container

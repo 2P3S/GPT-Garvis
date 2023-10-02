@@ -69,10 +69,6 @@ const HomeContainer : FC<Props> = ( { onClickModalDisplay, url } ) => {
 
     }, [ roomId, name ]) ;
 
-    useEffect(() => {
-        console.log(imageIndex) ;
-    }, [imageIndex]) ;
-
     function onClickImageChange() {
 
         let randomImageIndex ;

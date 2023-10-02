@@ -78,6 +78,7 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
     const [ socket, setSocket ] = useState<any>(undefined) ; 
     const [ members, setMembers ] = useState<Array<any>>([]) ;
     const [ me, setMe ] = useState<any>({}) ;
+    const [ inputUser, setInputUser ] = useState<any>([]) ;
     const [ inputChat, setInputChat ] = useState<ChatData>({
         role : "",
         message : "",
@@ -105,17 +106,6 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
                 socket.emit('join-request', requestData) ;
             });
 
-            // 유저가 연결됬을때 실행되는 이벤트 핸들러
-            socket.on('member-connected', (response) => {
-                const members = response.data.members ;
-
-                const uniqueArray = members.filter((obj : any, index : number, self : any) =>
-                                        index === self.findIndex((o : any) => o.id === obj.id && o.name === obj.name)
-                                    );
-
-                setMembers(uniqueArray) ;
-            });
-
             socket.on("join-success", (response) => {
                 const me = response.data.member ;
                 setMe(me) ;
@@ -124,6 +114,17 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
             socket.on('command-gpt', (data) => {
                 console.log(data) ;
             }) ;
+
+            // 유저가 연결됬을때 실행되는 이벤트 핸들러
+            socket.on('member-connected', (response : any) => {
+                const membersData = response.data.members ;
+
+                const uniqueArray = membersData.filter((obj : any, index : number, self : any) =>
+                                        index === self.findIndex((o : any) => o.id === obj.id && o.name === obj.name)
+                                    );
+
+                setInputUser(uniqueArray) ;
+            });
 
             socket.on('message', (response : any) => {
 
@@ -172,13 +173,37 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
     }, [ chatData ]) ;
 
     useEffect(() => {
-        
-        setInputChat({
-            role : "system",
-            message : "사용자가 입장하였습니다.",
-            time : new Date(),
-            userName : "System"
-        }) ;
+
+        let index = 0 ;
+        let addMemebers : any = [] ;
+
+        for(let i = 0 ; i < inputUser.length ; i++) {
+            index = members.findIndex((member : any) => member.id === inputUser[i].id) ;
+            if(index === -1) {
+                addMemebers = addMemebers.concat(inputUser[i]) ;
+            }
+        }
+
+        console.log(addMemebers) ;
+
+        if(index === -1) setMembers([
+            ...members,
+            ...addMemebers
+        ]) ;
+
+    }, [ inputUser ]) ;
+
+    useEffect(() => {
+
+        console.log(members) ;
+
+        if(members.length !== 0)
+            setInputChat({
+                role : "system",
+                message : "사용자가 입장하였습니다.",
+                time : new Date(),
+                userName : "System"
+            }) ;
 
     }, [ members ]) ;
 
