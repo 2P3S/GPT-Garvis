@@ -90,7 +90,6 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
     const [ inputMessage, setInputMessage ] = useState<string>('') ;
 
     useEffect(() => {
-        
         if( cookies.me && cookies.member ) {
 
             setUrl(cookies.roomId) ;
@@ -100,7 +99,6 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
 
             // 연결이 성공했을 때 실행되는 이벤트 핸들러
             socket.on('connect', () => {
-                console.log('Socket Connection Success') ;
                 // 서버로 데이터 보내기
                 const requestData = { roomId : cookies.member.room, memberId : cookies.member.id } ;
                 socket.emit('join-request', requestData) ;
@@ -112,13 +110,17 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
             }) ;
 
             socket.on('command-gpt', (data) => {
-                console.log(data) ;
+                setInputChat({
+                    role : "gpt",
+                    message : data.data.message.content,
+                    time : new Date(),
+                    userName : "Chat GPT"
+                }) ;
             }) ;
 
             // 유저가 연결됬을때 실행되는 이벤트 핸들러
             socket.on('member-connected', (response : any) => {
                 const membersData = response.data.members ;
-
                 const uniqueArray = membersData.filter((obj : any, index : number, self : any) =>
                                         index === self.findIndex((o : any) => o.id === obj.id && o.name === obj.name)
                                     );
@@ -147,6 +149,10 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
 
             setSocket(socket) ;
 
+            return () => {
+                const requestData = { roomId : cookies.member.room, memberId : cookies.member.id } ;
+                socket.emit('disconnected-request', requestData) ;
+            }
         }
         else {
             router.push('/') ; 
@@ -181,31 +187,43 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
             index = members.findIndex((member : any) => member.id === inputUser[i].id) ;
             if(index === -1) {
                 addMemebers = addMemebers.concat(inputUser[i]) ;
+                if(addMemebers.length !== 0)
+                    setInputChat({
+                        role : "system",
+                        message : `${inputUser[i].name}가 입장하였습니다.`,
+                        time : new Date(),
+                        userName : "System"
+                    }) ;
             }
         }
 
-        console.log(addMemebers) ;
+        if(addMemebers.length !== 0) 
+            setMembers([
+                ...members,
+                ...addMemebers
+            ]) ;
 
-        if(index === -1) setMembers([
-            ...members,
-            ...addMemebers
-        ]) ;
+
+        // socket && socket.on('member-disconnected', (response : any) => {
+        //     const removeMember = response.data ;
+        //     const index = members.findIndex((member : any) => member.id === removeMember.id) ;
+
+        //     console.log(removeMember) ;
+
+        //     setInputChat({
+        //         role : "system",
+        //         message : `${removeMember.name}가 퇴장하였습니다.`,
+        //         time : new Date(),
+        //         userName : "System"
+        //     }) ;
+
+        //     setMembers([
+        //         ...members.splice(0, index),
+        //         ...members.splice(index + 1, members.length) 
+        //     ])
+        // }) ;
 
     }, [ inputUser ]) ;
-
-    useEffect(() => {
-
-        console.log(members) ;
-
-        if(members.length !== 0)
-            setInputChat({
-                role : "system",
-                message : "사용자가 입장하였습니다.",
-                time : new Date(),
-                userName : "System"
-            }) ;
-
-    }, [ members ]) ;
 
     function keyDownEvent(e : KeyboardEvent<HTMLInputElement>) {
         e.stopPropagation() ; 
@@ -337,12 +355,12 @@ const ChatContainer : FC<Props> = ( { onClickModalDisplay, setUrl } ) => {
                 </ChatMain>
                 <ChatFooter>
                     <FooterArea>
-                        <FooterIcon 
+                        {/* <FooterIcon 
                             src = { Image } 
                             alt = "Image icon" 
                             width = "20"
                             height = "20" 
-                        />
+                        /> */}
                         <MessageBox>
                             {/* input 데이터 받아서 채팅 작성 */}
                             <MessageInput 
